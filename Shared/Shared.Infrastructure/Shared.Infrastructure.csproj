@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Persistence\Configurations\Systems\**" />
+    <Compile Remove="QueryServices\Systems\**" />
+    <Compile Remove="Repositories\Systems\**" />
+    <EmbeddedResource Remove="Persistence\Configurations\Systems\**" />
+    <EmbeddedResource Remove="QueryServices\Systems\**" />
+    <EmbeddedResource Remove="Repositories\Systems\**" />
+    <None Remove="Persistence\Configurations\Systems\**" />
+    <None Remove="QueryServices\Systems\**" />
+    <None Remove="Repositories\Systems\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EPPlus" Version="7.3.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.22" />
+    <PackageReference Include="Scrutor" Version="6.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\Identity\Identity.Application\Identity.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\Identity.Domain\Identity.Domain.csproj" />
+    <ProjectReference Include="..\Shared.Application\Shared.Application.csproj" />
+  </ItemGroup>
+
+</Project>

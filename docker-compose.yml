@@ -1,0 +1,29 @@
+services:
+  ied-vtvms-app:
+    image: ${DOCKER_REPO}:latest
+    container_name: ied-vtvms-container
+    ports:
+      - "5080:5080"
+      - "5081:5081"
+    environment:
+      # Db
+      - ConnectionStrings__DefaultConnection=${DB_CONN}
+      # JWT
+      - JwtSettings__SecretKey=${JWT_KEY}
+      - JwtSettings__Issuer=${JWT_ISSUER}
+      - JwtSettings__Audience=${JWT_AUDIENCE}
+      # ExternalApi
+      - ApiIEDVGUrl=${API_IEDVG_URL}
+      # Config
+      - MaxUploadSize=${MAX_UPLOAD_SIZE}
+      - MaxLengthRequest=${MAX_LENGTH_REQUEST}
+    restart: unless-stopped
+    networks:
+      - ied-vtvms-network
+    volumes:
+      - "/mnt/storage:/storage"
+      - "/mnt/templates:/templates"
+
+networks:
+  ied-vtvms-network:
+    driver: bridge

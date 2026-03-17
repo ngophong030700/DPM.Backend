@@ -1,0 +1,214 @@
+﻿name: Build and Deploy IED VTVMS Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      no-migrations: ${{ steps.check_migrations.outputs.no-migrations }}
+
+    steps:
+      # 1. Checkout source code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup .NET SDK
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # 3. Cache NuGet packages
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      # 4. Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore IED.VTVMS.Backend.sln
+
+      # 5. Install EF Core CLI tool
+      - name: Install EF Core CLI
+        run: |
+          dotnet tool install --global dotnet-ef --version 8.0.22
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      # 6. Build solution
+      - name: Build solution
+        run: dotnet build IED.VTVMS.Backend.sln --no-restore --configuration Release
+
+      # 7. Run tests
+      - name: Run tests
+        run: dotnet test IED.VTVMS.Backend.sln --no-build --verbosity normal
+
+      # 8. Check if EF migrations exist
+      - name: Check for EF migrations
+        id: check_migrations
+        run: |
+          export PATH="$HOME/.dotnet/tools:$PATH"
+          MIGRATIONS=$(dotnet ef migrations list --project Shared/Shared.Infrastructure/Shared.Infrastructure.csproj --startup-project IED.VTVMS.Host/IED.VTVMS.Host.csproj --context ApplicationDbContext || true)
+          if [ -z "$MIGRATIONS" ]; then
+            echo "no-migrations=true" >> $GITHUB_OUTPUT
+          else
+            echo "no-migrations=false" >> $GITHUB_OUTPUT
+          fi
+
+      # 9. Generate EF migration script
+      - name: Generate Migration Script
+        if: steps.check_migrations.outputs.no-migrations == 'false'
+        env:
+          DOTNET_ROOT: /usr/share/dotnet
+          ConnectionStrings__DefaultConnection: ${{ secrets.DB_CONN }}
+        run: |
+          export PATH="$HOME/.dotnet/tools:$PATH"
+          dotnet ef migrations script \
+            --idempotent \
+            --output migration.sql \
+            --project Shared/Shared.Infrastructure/Shared.Infrastructure.csproj \
+            --startup-project IED.VTVMS.Host/IED.VTVMS.Host.csproj \
+            --context ApplicationDbContext
+
+      # 10. Upload migration script
+      - name: Upload migration script
+        if: steps.check_migrations.outputs.no-migrations == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-script
+          path: migration.sql
+
+      # 11. Build Docker image
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKER_REPO }}:latest -f IED.VTVMS.Host/Dockerfile .
+
+      # 12. Docker login & push
+      - name: Docker login and push
+        run: |
+          echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          docker push ${{ secrets.DOCKER_REPO }}:latest
+
+  migrate:
+    needs: build
+    runs-on: [self-hosted, windows]
+    environment: production
+    if: |
+      github.ref == 'refs/heads/main' &&
+      needs.build.outputs.no-migrations == 'false'
+
+    steps:
+      # Download migration script
+      - name: Download migration script
+        uses: actions/download-artifact@v4
+        with:
+          name: migration-script
+
+      # Backup & migrate database on Windows host
+      - name: Backup & apply migration
+        shell: powershell
+        env:
+          DB_CONN: ${{ secrets.DB_CONN }}
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          Write-Host "Parsing database connection..."
+          $connParts = $env:DB_CONN -split ";"
+          $DB_SERVER = ($connParts | Where-Object { $_ -like "Server=*" }) -replace "Server=", ""
+          $DB_NAME   = ($connParts | Where-Object { $_ -like "Database=*" }) -replace "Database=", ""
+          $DB_USER   = ($connParts | Where-Object { $_ -like "User Id=*" }) -replace "User Id=", ""
+          $DB_PASS   = ($connParts | Where-Object { $_ -like "Password=*" }) -replace "Password=", ""
+
+          Write-Host "[OK] DB: $DB_SERVER / $DB_NAME"
+
+          # Backup directory
+          $BACKUP_DIR = "D:\IED\Storage\BackupDB"
+          New-Item -ItemType Directory -Force -Path $BACKUP_DIR | Out-Null
+          $BACKUP_FILE = "$BACKUP_DIR\$DB_NAME-$(Get-Date -Format yyyyMMddHHmm).bak"
+
+          Write-Host "Backing up database..."
+          sqlcmd -S $DB_SERVER -U $DB_USER -P $DB_PASS `
+            -Q "BACKUP DATABASE [$DB_NAME] TO DISK = N'$BACKUP_FILE' WITH INIT"
+
+          Write-Host "Applying migration..."
+          sqlcmd -S $DB_SERVER -U $DB_USER -P $DB_PASS -d $DB_NAME -i migration.sql
+
+          Write-Host "[OK] Migration completed"
+
+  deploy:
+    needs: [build, migrate]
+    runs-on: [self-hosted, linux]
+    environment: production
+    if: |
+      github.ref == 'refs/heads/main' && 
+      (needs.migrate.result == 'success' || needs.migrate.result == 'skipped')
+
+    steps:
+      - name: Create environment file
+        env:
+          DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
+          DB_CONN: ${{ secrets.DB_CONN }}
+          JWT_KEY: ${{ secrets.JWT_KEY }}
+          JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+          JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
+          API_IEDVG_URL: ${{ secrets.API_IEDVG_URL }}
+          MAX_UPLOAD_SIZE: ${{ secrets.MAX_UPLOAD_SIZE }}
+          MAX_LENGTH_REQUEST: ${{ secrets.MAX_LENGTH_REQUEST }}
+        run: |
+          cd /workspace/devops/ied-vtvms-backend
+          
+          echo "Creating .env file..."
+          cat > .env << EOF
+          DOCKER_REPO=${DOCKER_REPO}
+          DB_CONN=${DB_CONN}
+          JWT_KEY=${JWT_KEY}
+          JWT_ISSUER=${JWT_ISSUER}
+          JWT_AUDIENCE=${JWT_AUDIENCE}
+          API_IEDVG_URL=${API_IEDVG_URL}
+          MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE}
+          MAX_LENGTH_REQUEST=${MAX_LENGTH_REQUEST}
+          EOF
+          
+          echo "[OK] Environment file created"
+
+      - name: Deploy application on Linux VM
+        run: |
+          set -e
+          
+          echo "Deploying application..."
+          cd /workspace/devops/ied-vtvms-backend
+          
+          echo "Pulling latest Docker image..."
+          if ! docker compose pull ied-vtvms-app; then
+            echo "[ERROR] Failed to pull Docker image"
+            exit 1
+          fi
+          
+          echo "Stopping existing containers..."
+          docker compose down --remove-orphans
+          
+          echo "Starting new containers..."
+          docker compose up -d
+          
+          echo "Waiting for container to be healthy..."
+          sleep 10
+          
+          # Health check
+          if docker compose ps | grep -q "ied-vtvms-app.*Up"; then
+            echo "[OK] Application deployed successfully"
+            echo ""
+            echo "Running containers:"
+            docker compose ps
+          else
+            echo "[ERROR] Application failed to start"
+            echo ""
+            echo "Container logs (last 50 lines):"
+            docker compose logs --tail=50
+            exit 1
+          fi

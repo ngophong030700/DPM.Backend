@@ -1,0 +1,6 @@
+@DPM.Backend.Host_HostAddress = http://localhost:5069
+
+GET {{DPM.Backend.Host_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
