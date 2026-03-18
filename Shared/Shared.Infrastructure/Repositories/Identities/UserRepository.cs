@@ -3,6 +3,7 @@ using Shared.Domain.Exceptions;
 using Shared.Infrastructure.Persistence;
 using Identity.Domain.Users;
 using Identity.Domain.Repositories;
+using Identity.Domain.Groups;
 
 namespace Shared.Infrastructure.Repositories.Identities
 {
@@ -102,6 +103,26 @@ namespace Shared.Infrastructure.Repositories.Identities
             return await query
                 .OrderByDescending(x => x.CreatedAt)
                 .ToListAsync();
-        }
-    }
-}
+            }
+
+            public async Task AddUserToGroupAsync(int userId, int groupId, int createdBy)
+            {
+            var userGroup = UserGroup.Create(userId, groupId, createdBy);
+            _context.UserGroups.Add(userGroup);
+            await _context.SaveChangesAsync();
+            }
+
+            public async Task ClearGroupsForUserAsync(int userId)
+            {
+            var entities = await _context.UserGroups
+                .Where(x => x.UserId == userId)
+                .ToListAsync();
+
+            if (entities.Any())
+            {
+                _context.UserGroups.RemoveRange(entities);
+                await _context.SaveChangesAsync();
+            }
+            }
+            }
+            }

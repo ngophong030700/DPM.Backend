@@ -14,16 +14,28 @@ namespace Shared.Infrastructure.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public int UserId =>
-            int.TryParse(_httpContextAccessor.HttpContext?.User?.FindFirst("id")?.Value, out var userId)
-            ? userId
-            : 0;
+        public int UserId
+        {
+            get
+            {
+                var idClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)
+                              ?? _httpContextAccessor.HttpContext?.User?.FindFirst("sub")
+                              ?? _httpContextAccessor.HttpContext?.User?.FindFirst("id");
+
+                return int.TryParse(idClaim?.Value, out var userId) ? userId : 0;
+            }
+        }
 
         public string UserName =>
-            _httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "";
+            _httpContextAccessor.HttpContext?.User?.Identity?.Name 
+            ?? _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value
+            ?? _httpContextAccessor.HttpContext?.User?.FindFirst("unique_name")?.Value
+            ?? "";
 
         public string Email =>
-            _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value ?? "";
+            _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value 
+            ?? _httpContextAccessor.HttpContext?.User?.FindFirst("email")?.Value 
+            ?? "";
 
         public string FullName =>
             _httpContextAccessor.HttpContext?.User?.FindFirst("fullName")?.Value ?? UserName;

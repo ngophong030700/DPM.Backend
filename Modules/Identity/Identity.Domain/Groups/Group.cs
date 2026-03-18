@@ -70,9 +70,9 @@ public class Group : Entity
         _modifiedAt = DateTime.UtcNow;
     }
 
-    public void RemoveUserGroup(string userId)
+    public void RemoveUserGroup(int userId)
     {
-        var entity = _userGroups.FirstOrDefault(x => x.UserId.ToString() == userId);
+        var entity = _userGroups.FirstOrDefault(x => x.UserId == userId);
         if (entity != null)
         {
             _userGroups.Remove(entity);

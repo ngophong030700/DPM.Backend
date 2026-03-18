@@ -19,5 +19,8 @@ namespace Identity.Domain.Repositories
             int? departmentId = null,
             int? positionId = null,
             bool? isActive = null);
-    }
-}
+
+        Task AddUserToGroupAsync(int userId, int groupId, int createdBy);
+        Task ClearGroupsForUserAsync(int userId);
+        }
+        }

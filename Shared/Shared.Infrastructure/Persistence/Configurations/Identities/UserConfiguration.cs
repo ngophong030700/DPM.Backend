@@ -61,9 +61,6 @@ namespace Shared.Infrastructure.Persistence.Configurations.Identities
             builder.Property(u => u.PhoneNumber)
                 .HasMaxLength(20);
 
-            builder.Property(u => u.ImageUrl)
-                .HasMaxLength(255);
-
             builder.Property(u => u.DistinguishedName)
                 .HasMaxLength(500);
 
