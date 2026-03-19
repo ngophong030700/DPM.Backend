@@ -4,6 +4,7 @@ using Identity.Domain.Positions;
 using Identity.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Workflow.Domain.WorkflowCategories;
+using Workflow.Domain.MasterDataSources;
 
 namespace Shared.Infrastructure.Persistence
 {
@@ -14,6 +15,10 @@ namespace Shared.Infrastructure.Persistence
 
         #region Workflow
         public DbSet<WorkflowCategory> WorkflowCategories { get; set; }
+        public DbSet<MasterDataSource> MasterDataSources { get; set; }
+        public DbSet<MasterDataColumn> MasterDataColumns { get; set; }
+        public DbSet<MasterDataValue> MasterDataValues { get; set; }
+        public DbSet<MasterDataCell> MasterDataCells { get; set; }
         #endregion
 
         #region Identity
