@@ -32,6 +32,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\Identity\Identity.Application\Identity.Application.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Identity.Domain\Identity.Domain.csproj" />
+    <ProjectReference Include="..\..\Modules\Workflow\Workflow.Application\Workflow.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Workflow\Workflow.Domain\Workflow.Domain.csproj" />
     <ProjectReference Include="..\Shared.Application\Shared.Application.csproj" />
   </ItemGroup>
 

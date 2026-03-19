@@ -33,10 +33,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\.dockerignore = ..\.dockerignore
 		..\.gitattributes = ..\.gitattributes
 		..\.gitignore = ..\.gitignore
-		..\docker-compose.yml = ..\docker-compose.yml
 		..\ARCHITECTURE.md = ..\ARCHITECTURE.md
+		..\docker-compose.yml = ..\docker-compose.yml
 		..\README.md = ..\README.md
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflow", "Workflow", "{EB0EB246-2C7C-408B-867E-26C7EF05027D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Workflow.Application", "..\Modules\Workflow\Workflow.Application\Workflow.Application.csproj", "{838E9195-98EA-4382-BFCF-C51574FD2EBA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Workflow.Domain", "..\Modules\Workflow\Workflow.Domain\Workflow.Domain.csproj", "{11996FDB-81D8-4207-9E88-CA59559899F1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -68,6 +74,14 @@ Global
 		{3F9B510B-8FBA-48AE-A552-F3CD0C85C3AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3F9B510B-8FBA-48AE-A552-F3CD0C85C3AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3F9B510B-8FBA-48AE-A552-F3CD0C85C3AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{838E9195-98EA-4382-BFCF-C51574FD2EBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{838E9195-98EA-4382-BFCF-C51574FD2EBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{838E9195-98EA-4382-BFCF-C51574FD2EBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{838E9195-98EA-4382-BFCF-C51574FD2EBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11996FDB-81D8-4207-9E88-CA59559899F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11996FDB-81D8-4207-9E88-CA59559899F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11996FDB-81D8-4207-9E88-CA59559899F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11996FDB-81D8-4207-9E88-CA59559899F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,6 +94,9 @@ Global
 		{17C5677C-F26D-47D1-B140-006B4C63F7FC} = {98CA69BB-9178-4E84-B8AD-AF861BEDDB0E}
 		{FAE63948-CAB8-4787-A5CB-0977C45B66BD} = {17C5677C-F26D-47D1-B140-006B4C63F7FC}
 		{3F9B510B-8FBA-48AE-A552-F3CD0C85C3AB} = {17C5677C-F26D-47D1-B140-006B4C63F7FC}
+		{EB0EB246-2C7C-408B-867E-26C7EF05027D} = {98CA69BB-9178-4E84-B8AD-AF861BEDDB0E}
+		{838E9195-98EA-4382-BFCF-C51574FD2EBA} = {EB0EB246-2C7C-408B-867E-26C7EF05027D}
+		{11996FDB-81D8-4207-9E88-CA59559899F1} = {EB0EB246-2C7C-408B-867E-26C7EF05027D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {79DAF901-6E4A-44BF-B480-B775B2D16643}

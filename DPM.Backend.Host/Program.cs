@@ -76,6 +76,7 @@ builder.Services.AddApplicationDbContext(builder.Configuration);
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(Assembly.Load("Identity.Application"));
+    cfg.RegisterServicesFromAssembly(Assembly.Load("Workflow.Application"));
 });
 
 // Cấu hình camelCase cho route và query string

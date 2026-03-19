@@ -59,10 +59,14 @@ namespace IED.VTVMS.Host.Controllers.Identity
 
         [HttpGet("get-list")]
         [ProducesResponseType(typeof(EntityResponse<List<ViewListGroupDto>>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetList([FromQuery] string? keyword)
+        public async Task<IActionResult> GetList([FromQuery] PagingRequest request)
         {
-            var result = await _mediator.Send(new GetListGroupQuery(keyword));
-            return Ok(new EntityResponse<IEnumerable<ViewListGroupDto>>(result, "Lấy danh sách nhóm thành công."));
+            var result = await _mediator.Send(new GetListGroupQuery(request));
+            return Ok(new EntityResponse<List<ViewListGroupDto>>(
+                result.Items,
+                "Lấy danh sách nhóm thành công.",
+                result.TotalItems
+            ));
         }
 
         // ===================== GET DETAIL =====================

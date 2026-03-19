@@ -1,12 +1,13 @@
 using Identity.Application.Departments.Mappings;
 using Identity.Domain.Repositories;
 using MediatR;
+using Shared.Application.BaseClass;
 using Shared.Application.DTOs.Identity;
 
 namespace Identity.Application.Departments.Queries.GetDepartment
 {
     public class GetDepartmentQueriesHandler
-        : IRequestHandler<GetListDepartmentQuery, IEnumerable<ViewListDepartmentDto>>,
+        : IRequestHandler<GetListDepartmentQuery, PagingResponse<ViewListDepartmentDto>>,
           IRequestHandler<GetDepartmentByIdQuery, ViewDetailDepartmentDto?>
     {
         private readonly IDepartmentQueryService _queryService;
@@ -16,11 +17,11 @@ namespace Identity.Application.Departments.Queries.GetDepartment
             _queryService = queryService;
         }
 
-        public async Task<IEnumerable<ViewListDepartmentDto>> Handle(
+        public async Task<PagingResponse<ViewListDepartmentDto>> Handle(
             GetListDepartmentQuery request,
             CancellationToken cancellationToken)
         {
-            return await _queryService.GetListAsync(request.Keyword);
+            return await _queryService.GetListAsync(request.Request);
         }
 
         public async Task<ViewDetailDepartmentDto?> Handle(

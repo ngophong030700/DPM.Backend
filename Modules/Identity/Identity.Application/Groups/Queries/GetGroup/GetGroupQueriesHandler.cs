@@ -1,12 +1,13 @@
 using Identity.Application.Groups.Mappings;
 using Identity.Domain.Repositories;
 using MediatR;
+using Shared.Application.BaseClass;
 using Shared.Application.DTOs.Identity;
 
 namespace Identity.Application.Groups.Queries.GetGroup
 {
     public class GetGroupQueriesHandler
-        : IRequestHandler<GetListGroupQuery, IEnumerable<ViewListGroupDto>>,
+        : IRequestHandler<GetListGroupQuery, PagingResponse<ViewListGroupDto>>,
           IRequestHandler<GetGroupByIdQuery, ViewDetailGroupDto?>
     {
         private readonly IGroupQueryService _queryService;
@@ -16,11 +17,11 @@ namespace Identity.Application.Groups.Queries.GetGroup
             _queryService = queryService;
         }
 
-        public async Task<IEnumerable<ViewListGroupDto>> Handle(
+        public async Task<PagingResponse<ViewListGroupDto>> Handle(
             GetListGroupQuery request,
             CancellationToken cancellationToken)
         {
-            return await _queryService.GetListAsync(request.Keyword);
+            return await _queryService.GetListAsync(request.Request);
         }
 
         public async Task<ViewDetailGroupDto?> Handle(

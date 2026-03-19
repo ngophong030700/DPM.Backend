@@ -1,7 +1,9 @@
 using Identity.Application.Positions.Mappings;
 using Identity.Application.Positions.Queries;
 using Microsoft.EntityFrameworkCore;
+using Shared.Application.BaseClass;
 using Shared.Application.DTOs.Identity;
+using Shared.Infrastructure.Extensions;
 using Shared.Infrastructure.Persistence;
 
 namespace Shared.Infrastructure.QueryServices.Identity
@@ -15,19 +17,37 @@ namespace Shared.Infrastructure.QueryServices.Identity
             _context = context;
         }
 
-        public async Task<IEnumerable<ViewListPositionDto>> GetListAsync(string? keyword)
+        public async Task<PagingResponse<ViewListPositionDto>> GetListAsync(PagingRequest request)
         {
+            int page = request.PageNumber ?? 1;
+            int size = request.PageSize ?? int.MaxValue;
+
             var query = _context.Positions
                 .Where(x => !x.IsDeleted)
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(keyword))
+            if (!string.IsNullOrEmpty(request.Keyword))
             {
-                query = query.Where(x => x.Name.Contains(keyword));
+                var kw = request.Keyword.Trim().ToLower();
+                query = query.Where(x => x.Name.ToLower().Contains(kw));
             }
 
+            if (!string.IsNullOrWhiteSpace(request.SortBy))
+            {
+                query = request.SortDirection == Shared.Domain.Enum.SortDirectionEnum.Asc
+                    ? query.OrderByDynamic(request.SortBy, true)
+                    : query.OrderByDynamic(request.SortBy, false);
+            }
+            else
+            {
+                query = query.OrderBy(x => x.Name);
+            }
+
+            int total = await query.CountAsync();
+
             var items = await query
-                .OrderBy(x => x.Name)
+                .Skip((page - 1) * size)
+                .Take(size)
                 .Select(x => x.ToListDto()!)
                 .ToListAsync();
 
@@ -43,7 +63,13 @@ namespace Shared.Infrastructure.QueryServices.Identity
                 item.CreatedByName = users.FirstOrDefault(x => x.Id == item.CreatedBy)?.FullName;
             }
 
-            return items;
+            return new PagingResponse<ViewListPositionDto>
+            {
+                Items = items,
+                TotalItems = total,
+                PageNumber = page,
+                PageSize = size
+            };
         }
 
         public async Task<ViewDetailPositionDto?> GetByIdAsync(int id)

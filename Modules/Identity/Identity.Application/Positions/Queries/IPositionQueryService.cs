@@ -1,10 +1,11 @@
+using Shared.Application.BaseClass;
 using Shared.Application.DTOs.Identity;
 
 namespace Identity.Application.Positions.Queries
 {
     public interface IPositionQueryService
     {
-        Task<IEnumerable<ViewListPositionDto>> GetListAsync(string? keyword);
+        Task<PagingResponse<ViewListPositionDto>> GetListAsync(PagingRequest request);
         Task<ViewDetailPositionDto?> GetByIdAsync(int id);
     }
 }

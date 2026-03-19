@@ -3,6 +3,7 @@ using Identity.Domain.Groups;
 using Identity.Domain.Positions;
 using Identity.Domain.Users;
 using Microsoft.EntityFrameworkCore;
+using Workflow.Domain.WorkflowCategories;
 
 namespace Shared.Infrastructure.Persistence
 {
@@ -12,7 +13,7 @@ namespace Shared.Infrastructure.Persistence
             : base(options) { }
 
         #region Workflow
-
+        public DbSet<WorkflowCategory> WorkflowCategories { get; set; }
         #endregion
 
         #region Identity

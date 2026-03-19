@@ -1,12 +1,13 @@
 using Identity.Application.Positions.Mappings;
 using Identity.Domain.Repositories;
 using MediatR;
+using Shared.Application.BaseClass;
 using Shared.Application.DTOs.Identity;
 
 namespace Identity.Application.Positions.Queries.GetPosition
 {
     public class GetPositionQueriesHandler
-        : IRequestHandler<GetListPositionQuery, IEnumerable<ViewListPositionDto>>,
+        : IRequestHandler<GetListPositionQuery, PagingResponse<ViewListPositionDto>>,
           IRequestHandler<GetPositionByIdQuery, ViewDetailPositionDto?>
     {
         private readonly IPositionQueryService _queryService;
@@ -16,11 +17,11 @@ namespace Identity.Application.Positions.Queries.GetPosition
             _queryService = queryService;
         }
 
-        public async Task<IEnumerable<ViewListPositionDto>> Handle(
+        public async Task<PagingResponse<ViewListPositionDto>> Handle(
             GetListPositionQuery request,
             CancellationToken cancellationToken)
         {
-            return await _queryService.GetListAsync(request.Keyword);
+            return await _queryService.GetListAsync(request.Request);
         }
 
         public async Task<ViewDetailPositionDto?> Handle(
