@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\Identity\Identity.Domain\Identity.Domain.csproj" />
+    <ProjectReference Include="..\..\Modules\Workflow\Workflow.Domain\Workflow.Domain.csproj" />
     <ProjectReference Include="..\Shared.Domain\Shared.Domain.csproj" />
   </ItemGroup>
 

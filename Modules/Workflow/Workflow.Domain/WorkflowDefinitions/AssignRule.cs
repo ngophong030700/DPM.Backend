@@ -1,4 +1,4 @@
-namespace Workflow.Domain.WorkflowNodes;
+namespace Workflow.Domain.WorkflowDefinitions;
 
 public enum AssignRule
 {

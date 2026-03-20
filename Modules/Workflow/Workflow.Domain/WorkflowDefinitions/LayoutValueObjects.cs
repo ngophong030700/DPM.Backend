@@ -1,6 +1,6 @@
 using Shared.Domain;
 
-namespace Workflow.Domain.WorkflowLayouts;
+namespace Workflow.Domain.WorkflowDefinitions;
 
 /// <summary>
 /// Một ô trong layout. colSpan theo grid 12 cột.

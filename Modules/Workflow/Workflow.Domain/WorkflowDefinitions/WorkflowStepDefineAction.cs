@@ -1,14 +1,14 @@
 using Shared.Domain;
 
-namespace Workflow.Domain.WorkflowNodes;
+namespace Workflow.Domain.WorkflowDefinitions;
 
-public class WorkflowNodeAction : Entity
+public class WorkflowStepDefineAction : Entity
 {
     private int _id;
-    private string _nodeId;
+    private string _stepId;
     private string _buttonKey;
     private string _label;
-    private string? _targetNodeId;
+    private string? _targetStepId;
     private string? _notifyTemplate;
     private int _sortOrder;
     private DateTime _createdAt;
@@ -18,14 +18,14 @@ public class WorkflowNodeAction : Entity
     private bool _isDeleted;
 
     public int Id => _id;
-    public string NodeId => _nodeId;
+    public string StepId => _stepId;
 
     /// <summary>Key chuẩn: approve | reject | request_adjust | cancel</summary>
     public string ButtonKey => _buttonKey;
     public string Label => _label;
 
-    /// <summary>NodeId đích khi người dùng bấm nút này. Null = kết thúc flow.</summary>
-    public string? TargetNodeId => _targetNodeId;
+    /// <summary>StepId đích khi người dùng bấm nút này. Null = kết thúc flow.</summary>
+    public string? TargetStepId => _targetStepId;
     public string? NotifyTemplate => _notifyTemplate;
     public int SortOrder => _sortOrder;
     public DateTime CreatedAt => _createdAt;
@@ -34,23 +34,26 @@ public class WorkflowNodeAction : Entity
     public int ModifiedBy => _modifiedBy;
     public bool IsDeleted => _isDeleted;
 
-    private WorkflowNodeAction() { }
+    private readonly List<WorkflowActionRule> _rules = new();
+    public IReadOnlyCollection<WorkflowActionRule> Rules => _rules.AsReadOnly();
 
-    internal static WorkflowNodeAction Create(
-        string nodeId,
+    private WorkflowStepDefineAction() { }
+
+    internal static WorkflowStepDefineAction Create(
+        string stepId,
         string buttonKey,
         string label,
-        string? targetNodeId,
+        string? targetStepId,
         string? notifyTemplate,
         int createdBy,
         int sortOrder = 0)
     {
-        return new WorkflowNodeAction
+        return new WorkflowStepDefineAction
         {
-            _nodeId = nodeId ?? throw new ArgumentNullException(nameof(nodeId)),
+            _stepId = stepId ?? throw new ArgumentNullException(nameof(stepId)),
             _buttonKey = buttonKey ?? throw new ArgumentNullException(nameof(buttonKey)),
             _label = label ?? throw new ArgumentNullException(nameof(label)),
-            _targetNodeId = targetNodeId,
+            _targetStepId = targetStepId,
             _notifyTemplate = notifyTemplate,
             _sortOrder = sortOrder,
             _createdAt = DateTime.UtcNow,
@@ -61,15 +64,22 @@ public class WorkflowNodeAction : Entity
         };
     }
 
+    public WorkflowActionRule AddRule(string? conditionExpression, string targetStepId, int sortOrder)
+    {
+        var rule = WorkflowActionRule.Create(_id, conditionExpression, targetStepId, sortOrder);
+        _rules.Add(rule);
+        return rule;
+    }
+
     public void Update(
         string? label,
-        string? targetNodeId,
+        string? targetStepId,
         string? notifyTemplate,
         int? sortOrder,
         int modifiedBy)
     {
         _label = label ?? _label;
-        _targetNodeId = targetNodeId ?? _targetNodeId;
+        _targetStepId = targetStepId ?? _targetStepId;
         _notifyTemplate = notifyTemplate ?? _notifyTemplate;
         _sortOrder = sortOrder ?? _sortOrder;
         _modifiedBy = modifiedBy;

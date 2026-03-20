@@ -1,6 +1,6 @@
 using Shared.Domain;
 
-namespace Workflow.Domain.WorkflowFields;
+namespace Workflow.Domain.WorkflowDefinitions;
 
 /// <summary>
 /// Value object cho cấu hình nguồn dữ liệu của field kiểu Select / MultiSelect / User / Group.

@@ -1,6 +1,6 @@
 using Shared.Domain;
 
-namespace Workflow.Domain.WorkflowLayouts;
+namespace Workflow.Domain.WorkflowDefinitions;
 
 public class WorkflowLayout : Entity, IAggregateRoot
 {

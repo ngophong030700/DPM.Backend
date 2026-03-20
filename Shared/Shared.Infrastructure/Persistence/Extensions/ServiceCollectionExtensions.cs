@@ -48,8 +48,9 @@ namespace Shared.Infrastructure.Extensions
             // Register Repositories & QueryServices
             services.Scan(scan => scan
                 .FromAssemblies(
-                    typeof(IUserRepository).Assembly,  // Domain
-                    typeof(UserRepository).Assembly)   // Infrastructure
+                    typeof(IUserRepository).Assembly,  // Identity.Domain
+                    typeof(Workflow.Domain.Repositories.IWorkflowCategoryRepository).Assembly, // Workflow.Domain
+                    typeof(UserRepository).Assembly)   // Shared.Infrastructure
                 .AddClasses(classes => classes.Where(type =>
                     type.Name.EndsWith("Repository") ||
                     type.Name.EndsWith("QueryService")))

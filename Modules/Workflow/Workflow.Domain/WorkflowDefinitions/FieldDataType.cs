@@ -1,4 +1,4 @@
-namespace Workflow.Domain.WorkflowFields;
+namespace Workflow.Domain.WorkflowDefinitions;
 
 public enum FieldDataType
 {

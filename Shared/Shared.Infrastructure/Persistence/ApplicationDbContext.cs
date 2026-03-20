@@ -19,6 +19,13 @@ namespace Shared.Infrastructure.Persistence
         public DbSet<MasterDataColumn> MasterDataColumns { get; set; }
         public DbSet<MasterDataValue> MasterDataValues { get; set; }
         public DbSet<MasterDataCell> MasterDataCells { get; set; }
+
+        public DbSet<Workflow.Domain.WorkflowDefinitions.WorkflowDefinition> WorkflowDefinitions { get; set; }
+        public DbSet<Workflow.Domain.WorkflowDefinitions.WorkflowVersion> WorkflowVersions { get; set; }
+        public DbSet<Workflow.Domain.WorkflowDefinitions.WorkflowStepDefine> WorkflowStepDefines { get; set; }
+        public DbSet<Workflow.Domain.WorkflowDefinitions.WorkflowField> WorkflowFields { get; set; }
+        public DbSet<Workflow.Domain.WorkflowDefinitions.WorkflowLayout> WorkflowLayouts { get; set; }
+        public DbSet<Workflow.Domain.WorkflowDefinitions.WorkflowReport> WorkflowReports { get; set; }
         #endregion
 
         #region Identity

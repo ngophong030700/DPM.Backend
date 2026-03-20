@@ -1,6 +1,6 @@
 using Shared.Domain;
 
-namespace Workflow.Domain.WorkflowFields;
+namespace Workflow.Domain.WorkflowDefinitions;
 
 public class WorkflowGridColumn : Entity
 {

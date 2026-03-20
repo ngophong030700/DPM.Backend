@@ -1,6 +1,6 @@
 using Shared.Domain;
 
-namespace Workflow.Domain.WorkflowReports;
+namespace Workflow.Domain.WorkflowDefinitions;
 
 public enum ChartType
 {

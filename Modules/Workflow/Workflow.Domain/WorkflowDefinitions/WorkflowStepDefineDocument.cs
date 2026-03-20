@@ -1,11 +1,11 @@
 using Shared.Domain;
 
-namespace Workflow.Domain.WorkflowNodes;
+namespace Workflow.Domain.WorkflowDefinitions;
 
-public class WorkflowNodeDocument : Entity
+public class WorkflowStepDefineDocument : Entity
 {
     private int _id;
-    private string _nodeId;
+    private string _stepId;
     private string _docTypeName;
     private bool _isRequired;
     private bool _checkDigitalSignature;
@@ -17,7 +17,7 @@ public class WorkflowNodeDocument : Entity
     private bool _isDeleted;
 
     public int Id => _id;
-    public string NodeId => _nodeId;
+    public string StepId => _stepId;
     public string DocTypeName => _docTypeName;
     public bool IsRequired => _isRequired;
     public bool CheckDigitalSignature => _checkDigitalSignature;
@@ -28,19 +28,19 @@ public class WorkflowNodeDocument : Entity
     public int ModifiedBy => _modifiedBy;
     public bool IsDeleted => _isDeleted;
 
-    private WorkflowNodeDocument() { }
+    private WorkflowStepDefineDocument() { }
 
-    internal static WorkflowNodeDocument Create(
-        string nodeId,
+    internal static WorkflowStepDefineDocument Create(
+        string stepId,
         string docTypeName,
         bool isRequired,
         bool checkDigitalSignature,
         int createdBy,
         int sortOrder = 0)
     {
-        return new WorkflowNodeDocument
+        return new WorkflowStepDefineDocument
         {
-            _nodeId = nodeId ?? throw new ArgumentNullException(nameof(nodeId)),
+            _stepId = stepId ?? throw new ArgumentNullException(nameof(stepId)),
             _docTypeName = docTypeName ?? throw new ArgumentNullException(nameof(docTypeName)),
             _isRequired = isRequired,
             _checkDigitalSignature = checkDigitalSignature,
