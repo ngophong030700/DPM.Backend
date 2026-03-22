@@ -21,6 +21,7 @@ public class WorkflowVersion : Entity
     private int _createdBy;
     private DateTime _modifiedAt;
     private int _modifiedBy;
+    private bool _isDeleted;
 
     public int Id => _id;
     public int WorkflowId => _workflowId;
@@ -32,6 +33,7 @@ public class WorkflowVersion : Entity
     public int CreatedBy => _createdBy;
     public DateTime ModifiedAt => _modifiedAt;
     public int ModifiedBy => _modifiedBy;
+    public bool IsDeleted => _isDeleted;
 
     private WorkflowVersion() { }
 
@@ -52,7 +54,8 @@ public class WorkflowVersion : Entity
             _createdAt = DateTime.UtcNow,
             _modifiedAt = DateTime.UtcNow,
             _createdBy = createdBy,
-            _modifiedBy = createdBy
+            _modifiedBy = createdBy,
+            _isDeleted = false
         };
     }
 
@@ -83,6 +86,14 @@ public class WorkflowVersion : Entity
     public void UpdateNotes(string? notes, int modifiedBy)
     {
         _notes = notes;
+        _modifiedBy = modifiedBy;
+        _modifiedAt = DateTime.UtcNow;
+    }
+
+    public void SoftDelete(int modifiedBy)
+    {
+        if (_isDeleted) return;
+        _isDeleted = true;
         _modifiedBy = modifiedBy;
         _modifiedAt = DateTime.UtcNow;
     }

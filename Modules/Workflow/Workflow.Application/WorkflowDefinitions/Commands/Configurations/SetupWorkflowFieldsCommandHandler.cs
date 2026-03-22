@@ -4,6 +4,8 @@ using Shared.Domain.Exceptions;
 using Workflow.Domain.Repositories;
 using Workflow.Domain.WorkflowDefinitions;
 
+using Workflow.Application.WorkflowDefinitions.Mappings;
+
 namespace Workflow.Application.WorkflowDefinitions.Commands.Configurations
 {
     public class SetupWorkflowFieldsCommandHandler : IRequestHandler<SetupWorkflowFieldsCommand, bool>
@@ -32,11 +34,12 @@ namespace Workflow.Application.WorkflowDefinitions.Commands.Configurations
 
             foreach (var dto in request.Data.Fields)
             {
+                var dataType = WorkflowDefinitionMapping.MapToEnum(dto.DataType);
                 var field = WorkflowField.Create(
                     versionId: request.VersionId,
                     name: dto.Name,
                     label: dto.Label,
-                    dataType: dto.DataType,
+                    dataType: dataType,
                     dataSourceType: dto.DataSourceType,
                     dataSourceConfigJson: dto.DataSourceConfigJson,
                     fieldFormula: dto.FieldFormula,
@@ -46,20 +49,20 @@ namespace Workflow.Application.WorkflowDefinitions.Commands.Configurations
                     createdBy: userId
                 );
 
-                if (dto.Id.HasValue && dto.Id.Value > 0)
+                if (dto.Id.HasValue && dto.Id.Value > 0 && dto.Id.Value < int.MaxValue)
                 {
                     typeof(WorkflowField).GetField("_id", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                        ?.SetValue(field, dto.Id.Value);
+                        ?.SetValue(field, (int)dto.Id.Value);
                 }
 
-                if (dto.DataType == FieldDataType.Grid && dto.GridColumns.Any())
+                if (dataType == FieldDataType.Grid && dto.GridColumns.Any())
                 {
                     foreach (var col in dto.GridColumns)
                     {
                         field.AddGridColumn(
                             name: col.Name,
                             label: col.Label,
-                            dataType: col.DataType,
+                            dataType: WorkflowDefinitionMapping.MapToEnum(col.DataType),
                             dataSourceType: col.DataSourceType,
                             dataSourceConfigJson: col.DataSourceConfigJson,
                             settingsJson: col.SettingsJson,

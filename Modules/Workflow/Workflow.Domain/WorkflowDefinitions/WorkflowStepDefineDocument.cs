@@ -30,7 +30,7 @@ public class WorkflowStepDefineDocument : Entity
 
     private WorkflowStepDefineDocument() { }
 
-    internal static WorkflowStepDefineDocument Create(
+    public static WorkflowStepDefineDocument Create(
         string stepId,
         string docTypeName,
         bool isRequired,

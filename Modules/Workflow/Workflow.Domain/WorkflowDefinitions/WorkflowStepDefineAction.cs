@@ -39,7 +39,7 @@ public class WorkflowStepDefineAction : Entity
 
     private WorkflowStepDefineAction() { }
 
-    internal static WorkflowStepDefineAction Create(
+    public static WorkflowStepDefineAction Create(
         string stepId,
         string buttonKey,
         string label,

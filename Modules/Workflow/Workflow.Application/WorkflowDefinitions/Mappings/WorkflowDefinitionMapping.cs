@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Shared.Application.DTOs.Workflows;
 using Workflow.Domain.WorkflowDefinitions;
 
@@ -28,7 +29,7 @@ namespace Workflow.Application.WorkflowDefinitions.Mappings
         {
             if (entity == null) return null;
 
-            return new ViewDetailWorkflowDefinitionDto
+            var dto = new ViewDetailWorkflowDefinitionDto
             {
                 Id = entity.Id,
                 Name = entity.Name,
@@ -43,6 +44,25 @@ namespace Workflow.Application.WorkflowDefinitions.Mappings
                 ModifiedAt = entity.ModifiedAt,
                 Versions = entity.Versions.Select(v => v.ToVersionDto()!).ToList()
             };
+
+            if (!string.IsNullOrEmpty(entity.Permissions))
+            {
+                try
+                {
+                    var perms = JsonConvert.DeserializeObject<WorkflowPermissionsJsonDto>(entity.Permissions);
+                    if (perms != null)
+                    {
+                        dto.CreatePermissions = perms.CreatePermissions;
+                        dto.ViewPermissions = perms.ViewPermissions;
+                    }
+                }
+                catch
+                {
+                    // Fallback if not valid JSON
+                }
+            }
+
+            return dto;
         }
 
         public static ViewWorkflowVersionDto? ToVersionDto(this WorkflowVersion entity)
@@ -63,35 +83,103 @@ namespace Workflow.Application.WorkflowDefinitions.Mappings
 
         public static FieldConfigDto ToFieldConfigDto(this WorkflowField entity)
         {
-            return new FieldConfigDto
+            var dto = new FieldConfigDto
             {
                 Id = entity.Id,
+                VersionId = entity.VersionId,
                 Name = entity.Name,
                 Label = entity.Label,
                 DataType = entity.DataType,
+                DataTypeLabel = entity.DataType.ToLabel(),
                 DataSourceType = entity.DataSourceType,
                 DataSourceConfigJson = entity.DataSourceConfigJson,
                 FieldFormula = entity.FieldFormula,
                 SettingsJson = entity.SettingsJson,
                 SortOrder = entity.SortOrder,
                 IsRequired = entity.IsRequired,
-                GridColumns = entity.GridColumns.Select(c => c.ToGridColumnConfigDto()).ToList()
+                GridColumns = entity.GridColumns.Where(c => !c.IsDeleted).Select(c => c.ToGridColumnConfigDto()).ToList()
             };
+
+            if (!string.IsNullOrEmpty(entity.SettingsJson))
+            {
+                try { dto.Settings = JsonConvert.DeserializeObject(entity.SettingsJson); } catch { }
+            }
+
+            if (!string.IsNullOrEmpty(entity.DataSourceConfigJson))
+            {
+                try { dto.DataSourceConfig = JsonConvert.DeserializeObject(entity.DataSourceConfigJson); } catch { }
+            }
+
+            return dto;
         }
 
         public static GridColumnConfigDto ToGridColumnConfigDto(this WorkflowGridColumn entity)
         {
-            return new GridColumnConfigDto
+            var dto = new GridColumnConfigDto
             {
                 Id = entity.Id,
+                FieldId = entity.ParentFieldId,
                 Name = entity.Name,
                 Label = entity.Label,
                 DataType = entity.DataType,
+                DataTypeLabel = entity.DataType.ToLabel(),
                 DataSourceType = entity.DataSourceType,
                 DataSourceConfigJson = entity.DataSourceConfigJson,
                 SettingsJson = entity.SettingsJson,
                 SortOrder = entity.SortOrder,
                 IsRequired = entity.IsRequired
+            };
+
+            if (!string.IsNullOrEmpty(entity.SettingsJson))
+            {
+                try { dto.Settings = JsonConvert.DeserializeObject(entity.SettingsJson); } catch { }
+            }
+
+            if (!string.IsNullOrEmpty(entity.DataSourceConfigJson))
+            {
+                try { dto.DataSourceConfig = JsonConvert.DeserializeObject(entity.DataSourceConfigJson); } catch { }
+            }
+
+            return dto;
+        }
+
+        public static FieldDataType MapToEnum(object? value)
+        {
+            if (value == null) return FieldDataType.Text;
+            
+            if (int.TryParse(value.ToString(), out int intVal))
+            {
+                return (FieldDataType)intVal;
+            }
+
+            var strVal = value.ToString()?.ToLower();
+            return strVal switch
+            {
+                "text" => FieldDataType.Text,
+                "number" => FieldDataType.Number,
+                "date" or "datetime" => FieldDataType.Date,
+                "select" or "singleselect" => FieldDataType.Select,
+                "multiselect" => FieldDataType.MultiSelect,
+                "user" or "usergroup" => FieldDataType.User,
+                "group" => FieldDataType.Group,
+                "grid" => FieldDataType.Grid,
+                "formula" or "calculate" => FieldDataType.Formula,
+                _ => FieldDataType.Text
+            };
+        }
+
+        private static string ToLabel(this FieldDataType dataType)
+        {
+            return dataType switch
+            {
+                FieldDataType.Text => "Văn bản",
+                FieldDataType.Number => "Số lượng",
+                FieldDataType.Date => "Ngày giờ",
+                FieldDataType.Select => "Lựa chọn",
+                FieldDataType.User => "Người dùng",
+                FieldDataType.Grid => "Bảng (Grid)",
+                FieldDataType.Formula => "Công thức",
+                _ => dataType.ToString()
             };
         }
 

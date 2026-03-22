@@ -55,6 +55,7 @@ public class WorkflowVersionConfiguration : IEntityTypeConfiguration<WorkflowVer
         builder.Property(e => e.CreatedBy).HasColumnName("created_by");
         builder.Property(e => e.ModifiedAt).HasColumnName("modified_at").HasDefaultValueSql("GETDATE()");
         builder.Property(e => e.ModifiedBy).HasColumnName("modified_by");
+        builder.Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
     }
 }
 

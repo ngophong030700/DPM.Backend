@@ -87,6 +87,15 @@ namespace Shared.Infrastructure.Repositories.Workflows
             await _context.SaveChangesAsync();
         }
 
+        public async Task<bool> SoftDeleteVersionAsync(int versionId, int modifiedBy)
+        {
+            var version = await GetVersionByIdAsync(versionId);
+            if (version == null) return false;
+            version.SoftDelete(modifiedBy);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<List<WorkflowField>> GetFieldsByVersionIdAsync(int versionId)
         {
             return await _context.WorkflowFields
@@ -94,6 +103,13 @@ namespace Shared.Infrastructure.Repositories.Workflows
                 .Where(x => x.VersionId == versionId && !x.IsDeleted)
                 .OrderBy(x => x.SortOrder)
                 .ToListAsync();
+        }
+
+        public async Task<WorkflowField?> GetFieldByIdAsync(int id)
+        {
+            return await _context.WorkflowFields
+                .Include(f => f.GridColumns)
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         }
 
         public async Task SaveFieldsAsync(int versionId, List<WorkflowField> fields)
@@ -117,7 +133,6 @@ namespace Shared.Infrastructure.Repositories.Workflows
                     if (existing != null)
                     {
                         _context.Entry(existing).CurrentValues.SetValues(field);
-                        // Simplified handling for Demo. In production, GridColumns should be mapped properly.
                         _context.Entry(existing).State = EntityState.Modified;
                     }
                 }
@@ -127,6 +142,56 @@ namespace Shared.Infrastructure.Repositories.Workflows
                 }
             }
             await _context.SaveChangesAsync();
+        }
+
+        public async Task SaveFieldAsync(WorkflowField field)
+        {
+            if (field.Id > 0)
+            {
+                _context.WorkflowFields.Update(field);
+            }
+            else
+            {
+                await _context.WorkflowFields.AddAsync(field);
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> DeleteFieldAsync(int id, int modifiedBy)
+        {
+            var field = await GetFieldByIdAsync(id);
+            if (field == null) return false;
+            field.SoftDelete(modifiedBy);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<WorkflowGridColumn?> GetGridColumnByIdAsync(int id)
+        {
+            return await _context.Set<WorkflowGridColumn>()
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        }
+
+        public async Task SaveGridColumnAsync(WorkflowGridColumn column)
+        {
+            if (column.Id > 0)
+            {
+                _context.Set<WorkflowGridColumn>().Update(column);
+            }
+            else
+            {
+                await _context.Set<WorkflowGridColumn>().AddAsync(column);
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> DeleteGridColumnAsync(int id, int modifiedBy)
+        {
+            var column = await GetGridColumnByIdAsync(id);
+            if (column == null) return false;
+            column.SoftDelete(modifiedBy);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<WorkflowLayout?> GetLayoutByVersionIdAsync(int versionId)
@@ -157,6 +222,16 @@ namespace Shared.Infrastructure.Repositories.Workflows
                 .ToListAsync();
         }
 
+        public async Task<WorkflowStepDefine?> GetStepByIdAsync(string id, int versionId)
+        {
+            return await _context.WorkflowStepDefines
+                .Include(s => s.Actions).ThenInclude(a => a.Rules)
+                .Include(s => s.Documents)
+                .Include(s => s.FieldPermissions)
+                .Include(s => s.Hooks)
+                .FirstOrDefaultAsync(x => x.Id == id && x.VersionId == versionId && !x.IsDeleted);
+        }
+
         public async Task SaveStepsAsync(int versionId, List<WorkflowStepDefine> steps)
         {
             var existingSteps = await GetStepsByVersionIdAsync(versionId);
@@ -180,11 +255,97 @@ namespace Shared.Infrastructure.Repositories.Workflows
             await _context.SaveChangesAsync();
         }
 
+        public async Task SaveStepAsync(WorkflowStepDefine step)
+        {
+            var existing = await _context.WorkflowStepDefines.FindAsync(step.Id);
+            if (existing != null)
+            {
+                _context.Entry(existing).CurrentValues.SetValues(step);
+            }
+            else
+            {
+                await _context.WorkflowStepDefines.AddAsync(step);
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> DeleteStepAsync(string id, int versionId, int modifiedBy)
+        {
+            var step = await GetStepByIdAsync(id, versionId);
+            if (step == null) return false;
+            step.SoftDelete(modifiedBy);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<WorkflowStepDefineAction?> GetActionByIdAsync(int id)
+        {
+            return await _context.Set<WorkflowStepDefineAction>()
+                .Include(a => a.Rules)
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        }
+
+        public async Task SaveActionAsync(WorkflowStepDefineAction action)
+        {
+            if (action.Id > 0)
+            {
+                _context.Set<WorkflowStepDefineAction>().Update(action);
+            }
+            else
+            {
+                await _context.Set<WorkflowStepDefineAction>().AddAsync(action);
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> DeleteActionAsync(int id, int modifiedBy)
+        {
+            var action = await GetActionByIdAsync(id);
+            if (action == null) return false;
+            action.SoftDelete(modifiedBy);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<WorkflowStepDefineDocument?> GetDocumentByIdAsync(int id)
+        {
+            return await _context.Set<WorkflowStepDefineDocument>()
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        }
+
+        public async Task SaveDocumentAsync(WorkflowStepDefineDocument document)
+        {
+            if (document.Id > 0)
+            {
+                _context.Set<WorkflowStepDefineDocument>().Update(document);
+            }
+            else
+            {
+                await _context.Set<WorkflowStepDefineDocument>().AddAsync(document);
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> DeleteDocumentAsync(int id, int modifiedBy)
+        {
+            var doc = await GetDocumentByIdAsync(id);
+            if (doc == null) return false;
+            doc.SoftDelete(modifiedBy);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<List<WorkflowReport>> GetReportsByVersionIdAsync(int versionId)
         {
             return await _context.WorkflowReports
                 .Where(x => x.VersionId == versionId && !x.IsDeleted)
                 .ToListAsync();
+        }
+
+        public async Task<WorkflowReport?> GetReportByIdAsync(int id)
+        {
+            return await _context.WorkflowReports
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         }
 
         public async Task SaveReportAsync(WorkflowReport report)

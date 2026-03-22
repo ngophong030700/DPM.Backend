@@ -31,6 +31,8 @@ namespace Shared.Application.DTOs.Workflows
         public string? CategoryName { get; set; }
         public string? Icon { get; set; }
         public string? Description { get; set; }
+        public List<string> CreatePermissions { get; set; } = new();
+        public List<string> ViewPermissions { get; set; } = new();
         public string? Permissions { get; set; }
         public int CreatedById { get; set; }
         public string? CreatedBy { get; set; }
@@ -127,6 +129,8 @@ namespace Shared.Application.DTOs.Workflows
 
         [MaxLength(1000)]
         public string? Description { get; set; }
+        public List<string> CreatePermissions { get; set; } = new();
+        public List<string> ViewPermissions { get; set; } = new();
         public string? Permissions { get; set; }
     }
 
@@ -147,7 +151,15 @@ namespace Shared.Application.DTOs.Workflows
 
         [MaxLength(1000)]
         public string? Description { get; set; }
+        public List<string> CreatePermissions { get; set; } = new();
+        public List<string> ViewPermissions { get; set; } = new();
         public string? Permissions { get; set; }
+    }
+
+    public class WorkflowPermissionsJsonDto
+    {
+        public List<string> CreatePermissions { get; set; } = new();
+        public List<string> ViewPermissions { get; set; } = new();
     }
 
     #endregion
@@ -180,6 +192,7 @@ namespace Shared.Application.DTOs.Workflows
 
     public class StepPositionDto
     {
+        public int VersionId { get; set; }
         public double PositionX { get; set; }
         public double PositionY { get; set; }
     }
@@ -196,15 +209,23 @@ namespace Shared.Application.DTOs.Workflows
 
     public class FieldConfigDto
     {
-        public int? Id { get; set; }
+        public long? Id { get; set; }
+        public int VersionId { get; set; }
+        public int? WorkflowVersionId { get; set; } // Alias for FE compatibility
         [Required]
         public string Name { get; set; } = string.Empty;
         [Required]
         public string Label { get; set; } = string.Empty;
-        public FieldDataType DataType { get; set; }
+        public object? DataType { get; set; } // Accept string or int from FE
+        public string? DataTypeLabel { get; set; }
         public DataSourceType? DataSourceType { get; set; }
+        public object? DataSourceConfig { get; set; }
+        public object? Config { get; set; } // Alias for FE compatibility
         public string? DataSourceConfigJson { get; set; }
+        public string? MasterDataSourceName { get; set; }
         public string? FieldFormula { get; set; }
+        public object? Settings { get; set; }
+        public object? GridSettings { get; set; } // Alias for FE compatibility
         public string? SettingsJson { get; set; }
         public int SortOrder { get; set; }
         public bool IsRequired { get; set; }
@@ -214,14 +235,19 @@ namespace Shared.Application.DTOs.Workflows
 
     public class GridColumnConfigDto
     {
-        public int? Id { get; set; }
+        public long? Id { get; set; }
+        public int FieldId { get; set; }
         [Required]
         public string Name { get; set; } = string.Empty;
         [Required]
         public string Label { get; set; } = string.Empty;
-        public FieldDataType DataType { get; set; }
+        public object? DataType { get; set; } // Accept string or int from FE
+        public string? DataTypeLabel { get; set; }
         public DataSourceType? DataSourceType { get; set; }
+        public object? DataSourceConfig { get; set; }
+        public object? Config { get; set; } // Alias for FE compatibility
         public string? DataSourceConfigJson { get; set; }
+        public object? Settings { get; set; }
         public string? SettingsJson { get; set; }
         public int SortOrder { get; set; }
         public bool IsRequired { get; set; }
@@ -243,6 +269,7 @@ namespace Shared.Application.DTOs.Workflows
 
     public class StepConfigDto
     {
+        public int VersionId { get; set; }
         [Required]
         public string Id { get; set; } = string.Empty; // ReactFlow Node ID
         [Required]
@@ -266,6 +293,7 @@ namespace Shared.Application.DTOs.Workflows
     public class StepActionConfigDto
     {
         public int? Id { get; set; }
+        public string StepId { get; set; } = string.Empty;
         [Required]
         public string ButtonKey { get; set; } = string.Empty;
         [Required]
@@ -289,6 +317,7 @@ namespace Shared.Application.DTOs.Workflows
     public class StepDocumentConfigDto
     {
         public int? Id { get; set; }
+        public string StepId { get; set; } = string.Empty;
         [Required]
         public string DocTypeName { get; set; } = string.Empty;
         public bool IsRequired { get; set; }
@@ -318,10 +347,27 @@ namespace Shared.Application.DTOs.Workflows
     public class SetupWorkflowReportDto
     {
         public int? Id { get; set; }
+        public int VersionId { get; set; }
         [Required]
         public string Name { get; set; } = string.Empty;
         public string? FieldsConfigJson { get; set; }
         public string? ChartConfigJson { get; set; }
+    }
+
+    public class ViewWorkflowEdgeDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Source { get; set; } = string.Empty;
+        public string Target { get; set; } = string.Empty;
+        public string? Label { get; set; }
+        public string? Condition { get; set; }
+    }
+
+    public class WorkflowValidationResultDto
+    {
+        public bool IsValid => Errors.Count == 0;
+        public List<string> Errors { get; set; } = new();
+        public List<string> Warnings { get; set; } = new();
     }
 
     #endregion

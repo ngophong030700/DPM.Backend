@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Shared.Application.BaseClass;
 using Shared.Application.DTOs.Workflows;
 using Shared.Infrastructure.Extensions;
@@ -130,7 +131,46 @@ namespace Shared.Infrastructure.QueryServices.Workflows
                 .OrderBy(x => x.SortOrder)
                 .ToListAsync();
 
-            return fields.Select(f => f.ToFieldConfigDto()).ToList();
+            var dtos = fields.Select(f => f.ToFieldConfigDto()).ToList();
+
+            // Populate MasterDataSourceName
+            var dsIds = dtos
+                .Where(d => d.DataSourceType == DataSourceType.Master && !string.IsNullOrEmpty(d.DataSourceConfigJson))
+                .Select(d => {
+                    try 
+                    { 
+                        var obj = JsonConvert.DeserializeObject<dynamic>(d.DataSourceConfigJson!);
+                        return (int?)obj?.masterDataSourceId;
+                    } 
+                    catch { return null; }
+                })
+                .Where(id => id.HasValue)
+                .Select(id => id!.Value)
+                .Distinct()
+                .ToList();
+
+            if (dsIds.Any())
+            {
+                var dsNames = await _context.MasterDataSources
+                    .Where(ds => dsIds.Contains(ds.Id))
+                    .Select(ds => new { ds.Id, ds.Name })
+                    .ToDictionaryAsync(x => x.Id, x => x.Name);
+
+                foreach (var dto in dtos.Where(d => d.DataSourceType == DataSourceType.Master))
+                {
+                    try 
+                    {
+                        var obj = JsonConvert.DeserializeObject<dynamic>(dto.DataSourceConfigJson!);
+                        int? dsId = (int?)obj?.masterDataSourceId;
+                        if (dsId.HasValue && dsNames.TryGetValue(dsId.Value, out var name))
+                        {
+                            dto.MasterDataSourceName = name;
+                        }
+                    } catch { }
+                }
+            }
+
+            return dtos;
         }
 
         public async Task<SetupWorkflowLayoutDto?> GetLayoutByVersionIdAsync(int versionId)
@@ -160,6 +200,49 @@ namespace Shared.Infrastructure.QueryServices.Workflows
             return steps.Select(s => s.ToStepConfigDto()).ToList();
         }
 
+        public async Task<List<ViewWorkflowEdgeDto>> GetEdgesByVersionIdAsync(int versionId)
+        {
+            var steps = await _context.WorkflowStepDefines
+                .Include(s => s.Actions).ThenInclude(a => a.Rules)
+                .Where(x => x.VersionId == versionId && !x.IsDeleted)
+                .ToListAsync();
+
+            var edges = new List<ViewWorkflowEdgeDto>();
+
+            foreach (var step in steps)
+            {
+                foreach (var action in step.Actions.Where(a => !a.IsDeleted))
+                {
+                    // Basic transition
+                    if (!string.IsNullOrEmpty(action.TargetStepId))
+                    {
+                        edges.Add(new ViewWorkflowEdgeDto
+                        {
+                            Id = $"edge-{action.Id}",
+                            Source = step.Id,
+                            Target = action.TargetStepId,
+                            Label = action.Label
+                        });
+                    }
+
+                    // Rules (Conditional transitions)
+                    foreach (var rule in action.Rules)
+                    {
+                        edges.Add(new ViewWorkflowEdgeDto
+                        {
+                            Id = $"edge-rule-{rule.Id}",
+                            Source = step.Id,
+                            Target = rule.TargetStepId,
+                            Label = action.Label,
+                            Condition = rule.ConditionExpression
+                        });
+                    }
+                }
+            }
+
+            return edges;
+        }
+
         public async Task<List<ViewWorkflowReportDto>> GetReportsByVersionIdAsync(int versionId)
         {
             var reports = await _context.WorkflowReports
@@ -167,6 +250,14 @@ namespace Shared.Infrastructure.QueryServices.Workflows
                 .ToListAsync();
 
             return reports.Select(r => r.ToReportDto()).ToList();
+        }
+
+        public async Task<ViewWorkflowReportDto?> GetReportByIdAsync(int id)
+        {
+            var report = await _context.WorkflowReports
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+
+            return report?.ToReportDto();
         }
 
         public async Task<WorkflowDefinitionMetadataDto> GetDefinitionMetadataAsync()

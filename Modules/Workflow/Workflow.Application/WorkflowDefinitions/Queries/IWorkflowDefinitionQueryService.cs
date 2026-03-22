@@ -13,7 +13,9 @@ namespace Workflow.Application.WorkflowDefinitions.Queries
         Task<List<FieldConfigDto>> GetFieldsByVersionIdAsync(int versionId);
         Task<SetupWorkflowLayoutDto?> GetLayoutByVersionIdAsync(int versionId);
         Task<List<StepConfigDto>> GetStepsByVersionIdAsync(int versionId);
+        Task<List<ViewWorkflowEdgeDto>> GetEdgesByVersionIdAsync(int versionId);
         Task<List<ViewWorkflowReportDto>> GetReportsByVersionIdAsync(int versionId);
+        Task<ViewWorkflowReportDto?> GetReportByIdAsync(int id);
 
         // Metadata
         Task<WorkflowDefinitionMetadataDto> GetDefinitionMetadataAsync();

@@ -11,7 +11,7 @@ namespace DPM.Backend.Host.Controllers.Workflows
     [ApiController]
     [Authorize]
     [Route("v1/api/workflow-version")]
-    [Tags("Workflow Version (Tab 6: Phiên bản)")]
+    [Tags("Workflow Version (Phiên bản quy trình)")]
     public class WorkflowVersionController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -27,8 +27,8 @@ namespace DPM.Backend.Host.Controllers.Workflows
         [ProducesResponseType(typeof(EntityResponse<List<ViewWorkflowVersionDto>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetList(int workflowId)
         {
-            var workflow = await _queryService.GetByIdAsync(workflowId);
-            return Ok(new EntityResponse<List<ViewWorkflowVersionDto>>(workflow?.Versions ?? new List<ViewWorkflowVersionDto>(), "Lấy lịch sử phiên bản thành công."));
+            var data = await _queryService.GetByIdAsync(workflowId);
+            return Ok(new EntityResponse<List<ViewWorkflowVersionDto>>(data?.Versions ?? new(), "Lấy danh sách phiên bản thành công."));
         }
 
         [HttpPost("create")]
@@ -36,32 +36,40 @@ namespace DPM.Backend.Host.Controllers.Workflows
         public async Task<IActionResult> Create([FromBody] CreateWorkflowVersionDto dto)
         {
             var result = await _mediator.Send(new CreateWorkflowVersionCommand(dto.WorkflowId, dto));
-            return Ok(new EntityResponse<ViewWorkflowVersionDto>(result!, "Tạo phiên bản nháp thành công."));
+            return Ok(new EntityResponse<ViewWorkflowVersionDto>(result, "Tạo phiên bản mới thành công."));
         }
 
         [HttpPost("clone/{id}")]
-        [ProducesResponseType(typeof(EntityResponse<ViewWorkflowVersionDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(EntityResponse<bool>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Clone(int id, [FromBody] CloneWorkflowVersionDto dto)
         {
-            // Placeholder: Call Clone Command
-            return Ok(new EntityResponse<ViewWorkflowVersionDto>(new ViewWorkflowVersionDto(), "Sao chép phiên bản thành công."));
+            var result = await _mediator.Send(new CloneWorkflowVersionCommand(id, dto));
+            return Ok(new EntityResponse<bool>(result, "Sao chép phiên bản thành công."));
         }
 
         [HttpPost("activate/{id}")]
         [ProducesResponseType(typeof(EntityResponse<bool>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Activate(int id)
         {
-            // Placeholder: Call Activate Command (requires WorkflowId, can fetch inside handler)
-            var result = await _mediator.Send(new ActivateWorkflowVersionCommand(0, id));
+            var result = await _mediator.Send(new ActivateWorkflowVersionByIdCommand(id));
             return Ok(new EntityResponse<bool>(result, "Kích hoạt phiên bản thành công."));
+        }
+
+        [HttpPost("validate/{id}")]
+        [ProducesResponseType(typeof(EntityResponse<WorkflowValidationResultDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Validate(int id)
+        {
+            var result = await _mediator.Send(new ValidateWorkflowVersionCommand(id));
+            var message = result.IsValid ? "Phiên bản hợp lệ." : "Phiên bản có lỗi logic.";
+            return Ok(new EntityResponse<WorkflowValidationResultDto>(result, message));
         }
 
         [HttpDelete("delete/{id}")]
         [ProducesResponseType(typeof(EntityResponse<bool>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Delete(int id)
         {
-            // Placeholder: Call Delete Command
-            return Ok(new EntityResponse<bool>(true, "Xóa phiên bản nháp thành công."));
+            var result = await _mediator.Send(new DeleteWorkflowVersionCommand(id));
+            return Ok(new EntityResponse<bool>(result, "Xóa phiên bản thành công."));
         }
     }
 }

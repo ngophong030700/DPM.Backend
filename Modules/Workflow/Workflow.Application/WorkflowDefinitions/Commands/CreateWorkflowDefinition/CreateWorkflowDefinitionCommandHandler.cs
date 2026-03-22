@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using MediatR;
 using Shared.Application.DTOs.Workflows;
 using Shared.Application.Common.Interfaces;
@@ -34,13 +35,19 @@ namespace Workflow.Application.WorkflowDefinitions.Commands.CreateWorkflowDefini
                 throw new DomainException($"Mã quy trình '{data.Code}' đã tồn tại.");
             }
 
+            var permissionsJson = JsonConvert.SerializeObject(new WorkflowPermissionsJsonDto
+            {
+                CreatePermissions = data.CreatePermissions,
+                ViewPermissions = data.ViewPermissions
+            });
+
             var definition = WorkflowDefinition.Create(
                 name: data.Name,
                 code: data.Code,
                 categoryId: data.CategoryId,
                 icon: data.Icon,
                 description: data.Description,
-                permissions: data.Permissions,
+                permissions: permissionsJson,
                 createdBy: userId
             );
 

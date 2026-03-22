@@ -40,33 +40,35 @@ namespace DPM.Backend.Host.Controllers.Workflows
         }
 
         [HttpPost("create")]
-        [ProducesResponseType(typeof(EntityResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(EntityResponse<FieldConfigDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Create([FromBody] FieldConfigDto dto)
         {
-            // Note: Granular create logic would go here
-            return Ok(new EntityResponse<bool>(true, "Tạo trường dữ liệu thành công."));
+            var result = await _mediator.Send(new CreateFieldCommand(dto));
+            return Ok(new EntityResponse<FieldConfigDto?>(result, "Tạo trường dữ liệu thành công."));
         }
 
         [HttpPut("update/{id}")]
-        [ProducesResponseType(typeof(EntityResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(EntityResponse<FieldConfigDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Update(int id, [FromBody] FieldConfigDto dto)
         {
-            dto.Id = id;
-            return Ok(new EntityResponse<bool>(true, "Cập nhật trường dữ liệu thành công."));
+            var result = await _mediator.Send(new UpdateFieldCommand(id, dto));
+            return Ok(new EntityResponse<FieldConfigDto?>(result, "Cập nhật trường dữ liệu thành công."));
         }
 
         [HttpDelete("delete/{id}")]
         [ProducesResponseType(typeof(EntityResponse<bool>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Delete(int id)
         {
-            return Ok(new EntityResponse<bool>(true, "Xóa trường dữ liệu thành công."));
+            var result = await _mediator.Send(new DeleteFieldCommand(id));
+            return Ok(new EntityResponse<bool>(result, "Xóa trường dữ liệu thành công."));
         }
 
         [HttpPut("reorder")]
         [ProducesResponseType(typeof(EntityResponse<bool>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Reorder([FromBody] List<ReorderItemDto> orderings)
         {
-            return Ok(new EntityResponse<bool>(true, "Cập nhật thứ tự thành công."));
+            var result = await _mediator.Send(new ReorderFieldsCommand(orderings));
+            return Ok(new EntityResponse<bool>(result, "Cập nhật thứ tự thành công."));
         }
     }
 }
